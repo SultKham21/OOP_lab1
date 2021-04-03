@@ -70,7 +70,7 @@ namespace WindowsFormsApp1
                         {
                             UsedTypes.AddLast(types[i]);
                             Figure tmp = (Figure)Activator.CreateInstance(types[i], -1, -1, null, null, FillColorPanel.BackColor);
-                            //comboBox1.Items.Add(comboBox1.Items.);
+                            comboBox1.Items.Add(tmp.NameF);
                             FiguresExist = true;
                         }                                                                 
                         continue;
@@ -87,11 +87,43 @@ namespace WindowsFormsApp1
 
 
             CurrentFigure.StartPoint = new Point(e.X, e.Y);
-           
+            PreDrawTimer.Enabled = true;
+
+
+
+            FpsCounter = 0;
+            timer1.Enabled = true;
 
         }
 
+        private void panel1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (CurrentFigure.StartPoint.X < 0)
+                return;
 
+            if (!PreDrawTimer.Enabled)
+            {
+                FpsCounter++;
+
+                TemporaryImage.Dispose();
+
+                TemporaryImage = (Bitmap)MainPicture.Clone();
+
+                pictureBox1.Image = TemporaryImage;
+                gr = Graphics.FromImage(TemporaryImage);
+                CurrentFigure.DrawPanel = gr;
+
+
+                CurrentFigure.PreDrawEndPoint = e.Location;
+                gr.Dispose();
+                PreDrawTimer.Enabled = true;
+
+
+
+            }
+
+
+        }
 
         private void panel1_MouseUp(object sender, MouseEventArgs e)
         {
