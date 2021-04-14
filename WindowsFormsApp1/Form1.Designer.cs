@@ -52,6 +52,8 @@
             this.гавнаяToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.видToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.button1 = new System.Windows.Forms.Button();
+            this.undo = new System.Windows.Forms.Button();
+            this.redo = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PenWidthBar)).BeginInit();
@@ -269,11 +271,33 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
+            // undo
+            // 
+            this.undo.Location = new System.Drawing.Point(738, 79);
+            this.undo.Name = "undo";
+            this.undo.Size = new System.Drawing.Size(75, 23);
+            this.undo.TabIndex = 16;
+            this.undo.Text = "undo";
+            this.undo.UseVisualStyleBackColor = true;
+            this.undo.Click += new System.EventHandler(this.undo_Click);
+            // 
+            // redo
+            // 
+            this.redo.Location = new System.Drawing.Point(819, 79);
+            this.redo.Name = "redo";
+            this.redo.Size = new System.Drawing.Size(75, 23);
+            this.redo.TabIndex = 17;
+            this.redo.Text = "redo";
+            this.redo.UseVisualStyleBackColor = true;
+            this.redo.Click += new System.EventHandler(this.redo_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1344, 506);
+            this.Controls.Add(this.redo);
+            this.Controls.Add(this.undo);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.numericUpDown1);
             this.Controls.Add(this.TopsLabel);
@@ -326,6 +350,8 @@
         private System.Windows.Forms.ToolStripMenuItem гавнаяToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem видToolStripMenuItem;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button undo;
+        private System.Windows.Forms.Button redo;
     }
 }
 

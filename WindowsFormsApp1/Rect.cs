@@ -1,17 +1,22 @@
 ﻿using System.Drawing;
+using System;
 
 namespace WindowsFormsApp1
 {
+    [Serializable]
     public class Rectangle : Figure
     {
 
         public Rectangle(int x0, int y0, Graphics gr, Pen pen, Color Fc) : base(x0, y0, gr, pen, Fc) { }
-        public override string NameF
+
+        public override Figure Clone()
         {
-            get
-            {
-                return " Прямоугольник";
-            }
+
+            Rectangle NewF = new Rectangle(startPoint.X, startPoint.Y, DrawPanel, (Pen)DrPen.Clone(), FillColor);
+            NewF.endPoint = new Point(this.endPoint.X, this.endPoint.Y);
+            NewF.EndOfCurrentFigure = this.EndOfCurrentFigure;
+            return NewF;
+
         }
 
         public override Point EndPoint
@@ -20,14 +25,53 @@ namespace WindowsFormsApp1
             set
             {
                 endPoint = value;
-                Point MainPicture = new Point(startPoint.X, startPoint.Y);
+                this.Redraw();
+                EndOfCurrentFigure = true;
+            }
+        }
 
-                FindLeftTopPoint(ref startPoint, ref endPoint);
 
-                var brush = new SolidBrush(FillColor);
-                DrawPanel.DrawRectangle(DrPen, startPoint.X, startPoint.Y, endPoint.X - startPoint.X, endPoint.Y - startPoint.Y);
-                DrawPanel.FillRectangle(brush, startPoint.X, startPoint.Y, endPoint.X - startPoint.X, endPoint.Y - startPoint.Y);
-                startPoint = MainPicture;
+        public override void Redraw()
+        {
+
+
+
+
+            var brush = new SolidBrush(FillColor);
+
+            DrawPanel.DrawRectangle(DrPen, Math.Min(startPoint.X, endPoint.X), Math.Min(startPoint.Y, endPoint.Y), Math.Abs(endPoint.X - startPoint.X), Math.Abs(endPoint.Y - startPoint.Y));
+
+            DrawPanel.FillRectangle(brush, Math.Min(startPoint.X, endPoint.X), Math.Min(startPoint.Y, endPoint.Y), Math.Abs(endPoint.X - startPoint.X), Math.Abs(endPoint.Y - startPoint.Y));
+
+
+        }
+
+
+    }
+
+
+
+    public class RectangleCreator : shapeintfc
+    {
+        public Figure Create(int x0, int y0, Graphics gr, Pen pen, Color Fc)
+        {
+            return new Rectangle(x0, y0, gr, pen, Fc);
+        }
+
+
+
+        public string Name
+        {
+            get
+            {
+                return " Прямоугольник";
+            }
+        }
+        public bool TopsNeeded
+        {
+            get
+            {
+                return false;
             }
         }
 

@@ -1,9 +1,12 @@
 ﻿using System.Drawing;
+using System;
 
 namespace WindowsFormsApp1
 {
-    public abstract class Figure
+    [Serializable]
+    public abstract class Figure : ICloneable
     {
+
         public Graphics DrawPanel;
         protected Point startPoint;
         protected Point endPoint = new Point(-1, -1);
@@ -11,13 +14,7 @@ namespace WindowsFormsApp1
         public Color FillColor;
         public bool EndOfCurrentFigure = false;
 
-        public virtual string NameF
-        {
-            get
-            {
-                return "Figure";
-            }
-        }
+
 
         public Figure(int x0, int y0, Graphics gr, Pen pen, Color Fc)
         {
@@ -27,6 +24,21 @@ namespace WindowsFormsApp1
             FillColor = Fc;
         }
 
+        object ICloneable.Clone()
+        {
+            return Clone();
+
+        }
+
+        public virtual Figure Clone()
+        {
+            return null;
+
+        }
+
+        public virtual bool OnePointBack() { return false; }
+        public virtual void Redraw()
+        { }
 
         public virtual Point StartPoint
         {
@@ -68,25 +80,6 @@ namespace WindowsFormsApp1
             }
 
         }
-
-        protected void FindLeftTopPoint(ref Point MainPicture, ref Point TemporaryImage)
-        {
-            int buf;
-            if (TemporaryImage.X < MainPicture.X)
-            {
-                buf = TemporaryImage.X;
-                TemporaryImage.X = MainPicture.X;
-                MainPicture.X = buf;
-            }
-            if (TemporaryImage.Y < MainPicture.Y)
-            {
-                buf = TemporaryImage.Y;
-                TemporaryImage.Y = MainPicture.Y;
-                MainPicture.Y = buf;
-            }
-        }
-
-
 
     }
 }

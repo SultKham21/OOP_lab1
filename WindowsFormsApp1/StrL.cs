@@ -1,19 +1,21 @@
 ﻿using System.Drawing;
+using System;
 
 namespace WindowsFormsApp1
 {
+    [Serializable]
     public class StraigthLine : Figure
     {
         public StraigthLine(int x0, int y0, Graphics gr, Pen pen, Color Fc) : base(x0, y0, gr, pen, Fc) { }
 
-
-
-        public override string NameF
+        public override Figure Clone()
         {
-            get
-            {
-                return " Прямая";
-            }
+
+            StraigthLine NewF = new StraigthLine(startPoint.X, startPoint.Y, DrawPanel, (Pen)DrPen.Clone(), FillColor);
+            NewF.endPoint = new Point(this.endPoint.X, this.endPoint.Y);
+            NewF.EndOfCurrentFigure = this.EndOfCurrentFigure;
+            return NewF;
+
         }
 
         public override Point EndPoint
@@ -23,11 +25,38 @@ namespace WindowsFormsApp1
             {
                 endPoint = value;
                 DrawPanel.DrawLine(DrPen, startPoint, endPoint);
-
+                EndOfCurrentFigure = true;
             }
         }
 
+        public override void Redraw()
+        {
+            DrawPanel.DrawLine(DrPen, startPoint, endPoint);
+        }
 
+    }
+
+    public class StraigthLineCreator : shapeintfc
+    {
+        public Figure Create(int x0, int y0, Graphics gr, Pen pen, Color Fc)
+        {
+            return new StraigthLine(x0, y0, gr, pen, Fc);
+        }
+
+        public string Name
+        {
+            get
+            {
+                return " Прямая";
+            }
+        }
+        public bool TopsNeeded
+        {
+            get
+            {
+                return false;
+            }
+        }
 
     }
 }

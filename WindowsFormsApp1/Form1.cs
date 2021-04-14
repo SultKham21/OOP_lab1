@@ -1,41 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Reflection;
-using System.Runtime;
 
 namespace WindowsFormsApp1
 {
     public partial class Form1 : Form
     {
         LinkedList<Type> UsedTypes = new LinkedList<Type>();
+        LinkedList<shapeintfc> Creators = new LinkedList<shapeintfc>();
+        ustack FiguresBackBuffer = new ustack(), FiguresFrontBuffer = null;
 
         Graphics gr;
         Pen pen;
         Figure CurrentFigure;
-        Bitmap MainPicture= new Bitmap(1000,1000), TemporaryImage = new Bitmap(1000, 1000);
+        Bitmap MainPicture = new Bitmap(1000, 1000), TemporaryImage = new Bitmap(1000, 1000);
         int FpsCounter = 0;
-        
-        
+
+
 
         public Form1()
         {
-
             InitializeComponent();
 
             if (!LoadModules())
             {
-                MessageBox.Show("Error. No figures");
+                MessageBox.Show("Error. No figures modules found.");
                 Application.Exit();
             }
-            
-            
+
+
 
             comboBox1.SelectedIndex = 0;
             gr = Graphics.FromImage(MainPicture);
@@ -45,38 +41,37 @@ namespace WindowsFormsApp1
             pen = new Pen(Color.Black);
             pen.StartCap = pen.EndCap = System.Drawing.Drawing2D.LineCap.Round;
             pen.Width = PenWidthBar.Value;
-            CurrentFigure = (Figure)Activator.CreateInstance(UsedTypes.ElementAt<Type>(comboBox1.SelectedIndex), -1, -1, gr, pen, FillColorPanel.BackColor);
+
+            shapeintfc CurrentCreator = Creators.ElementAt<shapeintfc>(comboBox1.SelectedIndex);
+            CurrentFigure = CurrentCreator.Create(-1, -1, gr, pen, FillColorPanel.BackColor);
 
             pictureBox1.Image = MainPicture;
-
-
         }
 
         private bool LoadModules()
         {
             bool FiguresExist = false;
-
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            Type[] types = assembly.GetTypes();
-            for (int i = 0; i < types.Length; i++)
+            try
             {
-                
-                foreach (PropertyInfo pi in types[i].GetProperties())
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                Type[] types = assembly.GetTypes();
+                int k = 0;
+                for (int i = 0; i < types.Length; i++)
                 {
-                    
-                    if ( (pi.Name == "NameF") && (pi.CanRead) && (!pi.CanWrite) )
+                    if (types[i].GetInterface(typeof(shapeintfc).FullName) != null)
                     {
-                        if (!types[i].IsAbstract)
-                        {
-                            UsedTypes.AddLast(types[i]);
-                            Figure tmp = (Figure)Activator.CreateInstance(types[i], -1, -1, null, null, FillColorPanel.BackColor);
-                            comboBox1.Items.Add(tmp.NameF);
-                            FiguresExist = true;
-                        }                                                                 
-                        continue;
+                        Creators.AddLast((shapeintfc)Activator.CreateInstance(types[i]));
+
+
+                        comboBox1.Items.Add(Creators.ElementAt<shapeintfc>(k).Name);
+                        FiguresExist = true;
+                        k++;
                     }
                 }
-                
+            }
+            catch
+            {
+                FiguresExist = false;
             }
             return FiguresExist;
         }
@@ -127,8 +122,9 @@ namespace WindowsFormsApp1
 
         private void panel1_MouseUp(object sender, MouseEventArgs e)
         {
+            timer1.Enabled = false;
+            PreDrawTimer.Enabled = false;
 
-           
             try
             {
 
@@ -138,37 +134,64 @@ namespace WindowsFormsApp1
 
                 if (e.Button == MouseButtons.Right)
                     CurrentFigure.EndOfCurrentFigure = true;
+
+
+
+
                 CurrentFigure.EndPoint = new Point(e.X, e.Y);
 
-                CurrentFigure.StartPoint = new Point(-2,-2);
+                if (FiguresBackBuffer.Count < 1)
+                {
+                    FiguresBackBuffer.Push(CurrentFigure);
+                    undo.Enabled = true;
+                }
+                else
+                {
+                    if (FiguresBackBuffer.LastEnd())
+                    {
+                        FiguresBackBuffer.Push(CurrentFigure);
+                    }
+                    else
+                    {
+                        FiguresBackBuffer.Pop();
+                        FiguresBackBuffer.Push(CurrentFigure);
+                    }
+
+                }
+
+
+
+
+                CurrentFigure.StartPoint = new Point(-2, -2);
                 pictureBox1.Image = MainPicture;
-                
+
+                if (FiguresFrontBuffer != null)
+                {
+                    FiguresFrontBuffer = null;
+                    redo.Enabled = false;
+                }
+
             }
             catch { }
         }
 
-   
+
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             numericUpDown1.Visible = false;
             TopsLabel.Visible = false;
-           
-            CurrentFigure = (Figure)Activator.CreateInstance(UsedTypes.ElementAt<Type>(comboBox1.SelectedIndex), -1, -1, gr, pen, FillColorPanel.BackColor);
+            shapeintfc CurrentCreator = Creators.ElementAt<shapeintfc>(comboBox1.SelectedIndex);
 
+            CurrentFigure = CurrentCreator.Create(-1, -1, gr, pen, FillColorPanel.BackColor);
 
-            foreach (PropertyInfo pi in UsedTypes.ElementAt<Type>(comboBox1.SelectedIndex).GetProperties())
+            if (CurrentCreator.TopsNeeded)
             {
-                if ((pi.Name == "TopAmount"))
-                {
-                    numericUpDown1.Visible = true;
-                    TopsLabel.Visible = true;
-                    break;
-                }
-
+                numericUpDown1.Visible = true;
+                TopsLabel.Visible = true;
             }
-
-
+            if (FiguresBackBuffer.Count > 0)
+                FiguresBackBuffer.ElementAt(0).EndOfCurrentFigure = true;
         }
 
         private void PenWidthBar_Scroll(object sender, EventArgs e)
@@ -205,7 +228,7 @@ namespace WindowsFormsApp1
 
 
 
-       
+
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -235,6 +258,44 @@ namespace WindowsFormsApp1
         private void button1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void undo_Click(object sender, EventArgs e)
+        {
+            int N = FiguresBackBuffer.Count;
+            if (N <= 0)
+                return;
+            if (FiguresFrontBuffer == null)
+                FiguresFrontBuffer = new ustack();
+            Figure Last = FiguresBackBuffer.ElementAt(0);
+            Last.EndOfCurrentFigure = true;
+            FiguresFrontBuffer.Push(Last);
+            FiguresBackBuffer.Pop();
+            redo.Enabled = true;
+            gr = Graphics.FromImage(MainPicture);
+            gr.Clear(pictureBox1.BackColor);
+            FiguresBackBuffer.DrawStack(gr);
+            pictureBox1.Image = MainPicture;
+            if (FiguresBackBuffer.Count <= 0)
+                undo.Enabled = false;
+            shapeintfc CurrentCreator = Creators.ElementAt<shapeintfc>(comboBox1.SelectedIndex);
+            CurrentFigure = CurrentCreator.Create(-1, -1, gr, pen, FillColorPanel.BackColor);
+        }
+
+        private void redo_Click(object sender, EventArgs e)
+        {
+            Figure tmp = FiguresFrontBuffer.Pop();
+            gr = Graphics.FromImage(MainPicture);
+            tmp.DrawPanel = gr;
+            tmp.Redraw();
+            FiguresBackBuffer.Push(tmp);
+            undo.Enabled = true;
+            pictureBox1.Image = MainPicture;
+            gr.Dispose();
+            if (FiguresFrontBuffer.Count == 0)
+            {
+                redo.Enabled = false;
+            }
         }
 
         private void PreDrawTimer_Tick(object sender, EventArgs e)

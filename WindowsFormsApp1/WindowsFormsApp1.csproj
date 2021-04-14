@@ -60,7 +60,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rect.cs" />
     <Compile Include="rpol.cs" />
+    <Compile Include="shapeintfc.cs" />
     <Compile Include="StrL.cs" />
+    <Compile Include="ustack.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
