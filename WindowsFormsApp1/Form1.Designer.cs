@@ -48,12 +48,14 @@
             this.новыйToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.открытьToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.сохранитьToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.сохранитьКакToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.импортToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.гавнаяToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.видToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.button1 = new System.Windows.Forms.Button();
             this.undo = new System.Windows.Forms.Button();
             this.redo = new System.Windows.Forms.Button();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.openDllDialog = new System.Windows.Forms.OpenFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PenWidthBar)).BeginInit();
@@ -102,7 +104,6 @@
             this.TopsLabel.Size = new System.Drawing.Size(88, 17);
             this.TopsLabel.TabIndex = 5;
             this.TopsLabel.Text = "Вершины:";
-            this.TopsLabel.Click += new System.EventHandler(this.TopsLabel_Click);
             // 
             // PreDrawTimer
             // 
@@ -118,7 +119,6 @@
             this.pictureBox1.Size = new System.Drawing.Size(1342, 508);
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
-            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
             this.pictureBox1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseDown);
             this.pictureBox1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseMove);
             this.pictureBox1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseUp);
@@ -143,7 +143,6 @@
             this.PenColorPanel.Size = new System.Drawing.Size(29, 24);
             this.PenColorPanel.TabIndex = 9;
             this.PenColorPanel.Click += new System.EventHandler(this.PenColorButton_Click);
-            this.PenColorPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.PenColorPanel_Paint);
             // 
             // FillColorButton
             // 
@@ -190,7 +189,6 @@
             this.label3.Size = new System.Drawing.Size(116, 17);
             this.label3.TabIndex = 12;
             this.label3.Text = "Толщина линий:";
-            this.label3.Click += new System.EventHandler(this.label3_Click);
             // 
             // label1
             // 
@@ -220,7 +218,7 @@
             this.новыйToolStripMenuItem,
             this.открытьToolStripMenuItem,
             this.сохранитьToolStripMenuItem,
-            this.сохранитьКакToolStripMenuItem});
+            this.импортToolStripMenuItem});
             this.файлToolStripMenuItem.Name = "файлToolStripMenuItem";
             this.файлToolStripMenuItem.Size = new System.Drawing.Size(59, 24);
             this.файлToolStripMenuItem.Text = "Файл";
@@ -228,26 +226,28 @@
             // новыйToolStripMenuItem
             // 
             this.новыйToolStripMenuItem.Name = "новыйToolStripMenuItem";
-            this.новыйToolStripMenuItem.Size = new System.Drawing.Size(192, 26);
+            this.новыйToolStripMenuItem.Size = new System.Drawing.Size(166, 26);
             this.новыйToolStripMenuItem.Text = "Новый";
             // 
             // открытьToolStripMenuItem
             // 
             this.открытьToolStripMenuItem.Name = "открытьToolStripMenuItem";
-            this.открытьToolStripMenuItem.Size = new System.Drawing.Size(192, 26);
+            this.открытьToolStripMenuItem.Size = new System.Drawing.Size(166, 26);
             this.открытьToolStripMenuItem.Text = "Открыть";
             // 
             // сохранитьToolStripMenuItem
             // 
             this.сохранитьToolStripMenuItem.Name = "сохранитьToolStripMenuItem";
-            this.сохранитьToolStripMenuItem.Size = new System.Drawing.Size(192, 26);
+            this.сохранитьToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
             this.сохранитьToolStripMenuItem.Text = "Сохранить";
+            this.сохранитьToolStripMenuItem.Click += new System.EventHandler(this.сохранитьToolStripMenuItem_Click);
             // 
-            // сохранитьКакToolStripMenuItem
+            // импортToolStripMenuItem
             // 
-            this.сохранитьКакToolStripMenuItem.Name = "сохранитьКакToolStripMenuItem";
-            this.сохранитьКакToolStripMenuItem.Size = new System.Drawing.Size(192, 26);
-            this.сохранитьКакToolStripMenuItem.Text = "Сохранить как";
+            this.импортToolStripMenuItem.Name = "импортToolStripMenuItem";
+            this.импортToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.импортToolStripMenuItem.Text = "Импорт";
+            this.импортToolStripMenuItem.Click += new System.EventHandler(this.импортToolStripMenuItem_Click);
             // 
             // гавнаяToolStripMenuItem
             // 
@@ -279,7 +279,6 @@
             this.undo.TabIndex = 16;
             this.undo.Text = "undo";
             this.undo.UseVisualStyleBackColor = true;
-            this.undo.Click += new System.EventHandler(this.undo_Click);
             // 
             // redo
             // 
@@ -289,7 +288,14 @@
             this.redo.TabIndex = 17;
             this.redo.Text = "redo";
             this.redo.UseVisualStyleBackColor = true;
-            this.redo.Click += new System.EventHandler(this.redo_Click);
+            // 
+            // openFileDialog1
+            // 
+            this.openFileDialog1.FileName = "openFileDialog1";
+            // 
+            // openDllDialog
+            // 
+            this.openDllDialog.FileName = "openFileDialog2";
             // 
             // Form1
             // 
@@ -315,7 +321,6 @@
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Form1";
             this.Text = "Form1";
-            this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.PenWidthBar)).EndInit();
@@ -346,12 +351,14 @@
         private System.Windows.Forms.ToolStripMenuItem новыйToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem открытьToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem сохранитьToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem сохранитьКакToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem гавнаяToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem видToolStripMenuItem;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Button undo;
         private System.Windows.Forms.Button redo;
+        private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.ToolStripMenuItem импортToolStripMenuItem;
+        private System.Windows.Forms.OpenFileDialog openDllDialog;
     }
 }
 

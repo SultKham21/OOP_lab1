@@ -1,19 +1,23 @@
-﻿using System.Collections.Generic;
-using System.Drawing;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System;
+using System.Text;
+using System.Threading.Tasks;
+using System.Drawing;
+using BasedInterfaces;
 
 
 namespace WindowsFormsApp1
 {
+
     [Serializable]
     public class Polygon : Figure
     {
         public Polygon(int x0, int y0, Graphics gr, Pen pen, Color Fc) : base(x0, y0, gr, pen, Fc) { }
-        private LinkedList<Point> points = new LinkedList<Point>();
+        public LinkedList<Point> points = new LinkedList<Point>();
         protected int n = 0;
 
-        public override Figure Clone()
+        public override IFigure Clone()
         {
             Polygon NewF = new Polygon(startPoint.X, startPoint.Y, null, (Pen)DrPen.Clone(), FillColor);
             NewF.EndOfCurrentFigure = this.EndOfCurrentFigure;
@@ -56,7 +60,8 @@ namespace WindowsFormsApp1
             get => base.PreDrawEndPoint;
             set
             {
-                DrawPanel.DrawLine(DrPen, points.ElementAt<Point>(n - 1), value);
+                if (DrawPanel != null)
+                    DrawPanel.DrawLine(DrPen, points.ElementAt<Point>(n - 1), value);
             }
         }
 
@@ -69,19 +74,20 @@ namespace WindowsFormsApp1
 
 
                 endPoint = value;
-                points.AddLast(value);
+                if (value.X > 0)
+                    points.AddLast(value);
                 if (!this.EndOfCurrentFigure)
                 {
 
 
-                    if (n > 0)
+                    if (n > 0 && (DrawPanel != null))
                     {
                         DrawPanel.DrawLine(DrPen, points.ElementAt<Point>(n - 1), points.ElementAt<Point>(n));
                     }
                     n++;
 
                 }
-                else
+                else if (DrawPanel != null)
                     this.Redraw();
 
             }
@@ -129,9 +135,9 @@ namespace WindowsFormsApp1
     }
 
 
-    public class PolygonCreator : shapeintfc
+    public class PolygonCreator : IFiguresCreator
     {
-        public Figure Create(int x0, int y0, Graphics gr, Pen pen, Color Fc)
+        public IFigure Create(int x0, int y0, Graphics gr, Pen pen, Color Fc)
         {
             return new Polygon(x0, y0, gr, pen, Fc);
         }
@@ -154,4 +160,5 @@ namespace WindowsFormsApp1
         }
 
     }
+
 }

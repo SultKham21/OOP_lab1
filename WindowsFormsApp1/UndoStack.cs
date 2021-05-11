@@ -4,19 +4,25 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
+using BasedInterfaces;
 
 namespace WindowsFormsApp1
 {
-    class ustack
+    //----------------------------------------------------------------------------------------
+
+    // Class for undo stack realization.
+
+    public class UndoStack
     {
-        private Stack<Figure> LastFig;
+
+        private Stack<IFigure> LastFig;
         private int n = 0;
         public Graphics gr;
 
 
-        public ustack()
+        public UndoStack()
         {
-            LastFig = new Stack<Figure>();
+            LastFig = new Stack<IFigure>();
         }
 
         public int Count
@@ -27,15 +33,15 @@ namespace WindowsFormsApp1
             }
         }
 
-        public Figure ElementAt(int i)
+        public IFigure ElementAt(int i)
         {
             if (i < n)
-                return LastFig.ElementAt<Figure>(i);
+                return LastFig.ElementAt<IFigure>(i);
             else
                 return null;
         }
 
-        public bool Push(Figure F)
+        public bool Push(IFigure F)
         {
             try
             {
@@ -59,7 +65,7 @@ namespace WindowsFormsApp1
             if (LastFig.Count <= 0)
                 return false;
             bool res;
-            res = LastFig.ElementAt<Figure>(0).EndOfCurrentFigure;
+            res = LastFig.ElementAt<IFigure>(0).EndOfCurrentFigure;
             return res;
 
         }
@@ -68,7 +74,7 @@ namespace WindowsFormsApp1
         {
             if (this.Count < 1)
                 return false;
-            Figure tmp;
+            IFigure tmp;
             for (int i = this.Count - 1; i >= 0; i--)
             {
                 tmp = this.ElementAt(i);
@@ -81,16 +87,18 @@ namespace WindowsFormsApp1
         }
 
 
-        public Figure Pop()
+        public IFigure Pop()
         {
             if (n == 0)
                 return null;
             else
             {
-                Figure ret = LastFig.Pop();
+                IFigure ret = LastFig.Pop();
                 n--;
                 return ret;
             }
         }
+
+
     }
 }

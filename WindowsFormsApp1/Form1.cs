@@ -1,21 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Reflection;
+using System.IO;
+using Newtonsoft.Json;
+using System.Runtime;
+using BasedInterfaces;
 
 namespace WindowsFormsApp1
 {
     public partial class Form1 : Form
     {
-        LinkedList<Type> UsedTypes = new LinkedList<Type>();
-        LinkedList<shapeintfc> Creators = new LinkedList<shapeintfc>();
-        ustack FiguresBackBuffer = new ustack(), FiguresFrontBuffer = null;
+        //LinkedList<Type> UsedTypes = new LinkedList<Type>();
+        LinkedList<IFiguresCreator> Creators = new LinkedList<IFiguresCreator>();
 
+        UndoStack FiguresBackBuffer = new UndoStack(), FiguresFrontBuffer = null;
         Graphics gr;
         Pen pen;
-        Figure CurrentFigure;
+        IFigure CurrentFigure = null;
         Bitmap MainPicture = new Bitmap(1000, 1000), TemporaryImage = new Bitmap(1000, 1000);
         int FpsCounter = 0;
 
@@ -23,6 +30,7 @@ namespace WindowsFormsApp1
 
         public Form1()
         {
+
             InitializeComponent();
 
             if (!LoadModules())
@@ -33,7 +41,7 @@ namespace WindowsFormsApp1
 
 
 
-            comboBox1.SelectedIndex = 0;
+
             gr = Graphics.FromImage(MainPicture);
 
 
@@ -42,28 +50,32 @@ namespace WindowsFormsApp1
             pen.StartCap = pen.EndCap = System.Drawing.Drawing2D.LineCap.Round;
             pen.Width = PenWidthBar.Value;
 
-            shapeintfc CurrentCreator = Creators.ElementAt<shapeintfc>(comboBox1.SelectedIndex);
-            CurrentFigure = CurrentCreator.Create(-1, -1, gr, pen, FillColorPanel.BackColor);
-
+            comboBox1.SelectedIndex = 0;
             pictureBox1.Image = MainPicture;
+
+
         }
 
         private bool LoadModules()
         {
+            Type mainInterface = typeof(IFiguresCreator);
             bool FiguresExist = false;
             try
             {
+
                 Assembly assembly = Assembly.GetExecutingAssembly();
-                Type[] types = assembly.GetTypes();
+                Type[] types = assembly.GetExportedTypes();
                 int k = 0;
                 for (int i = 0; i < types.Length; i++)
                 {
-                    if (types[i].GetInterface(typeof(shapeintfc).FullName) != null)
+
+                    if (mainInterface.IsAssignableFrom(types[i]))
                     {
-                        Creators.AddLast((shapeintfc)Activator.CreateInstance(types[i]));
+
+                        Creators.AddLast((IFiguresCreator)Activator.CreateInstance(types[i]));
 
 
-                        comboBox1.Items.Add(Creators.ElementAt<shapeintfc>(k).Name);
+                        comboBox1.Items.Add(Creators.ElementAt<IFiguresCreator>(k).Name);
                         FiguresExist = true;
                         k++;
                     }
@@ -76,11 +88,93 @@ namespace WindowsFormsApp1
             return FiguresExist;
         }
 
+        private void LoadDll_Click_(object sender, EventArgs e)
+        {
+            if (openDllDialog.ShowDialog() == DialogResult.OK)
+            {
+
+                AppDomain ad = AppDomain.CurrentDomain;
+                ad.AssemblyResolve += MyHandler;
+                var plug = typeof(IFiguresCreator);
+                //  byte[] bytes = File.ReadAllBytes(openDllDialog.FileName);
+
+                Assembly assembly;
+                try
+                {
+                    assembly = ad.Load(openDllDialog.FileName);
+
+                }
+                catch
+                {
+                    MessageBox.Show("Данная сборка уже загружена");
+                    return;
+                }
+
+
+
+                Type[] types = assembly.GetTypes();
+
+                bool IFiguresExist = false;
+                for (int i = 0; i < types.Length; i++)
+                {
+
+
+                    if (plug.IsAssignableFrom(types[i]))
+                    {
+
+                        try
+                        {
+                            IFiguresCreator Tmp = (IFiguresCreator)Activator.CreateInstance(types[i]);
+
+                            Creators.AddLast(((IFiguresCreator)Activator.CreateInstance(types[i])));
+                            comboBox1.Items.Add(Creators.Last<IFiguresCreator>().Name);
+                        }
+                        catch (Exception ex)
+                        { MessageBox.Show(ex.Message); }
+
+                        IFiguresExist = true;
+
+
+                    }
+
+                }
+
+                if (!IFiguresExist)
+                {
+                    MessageBox.Show("Подходящих ресурсов не найдено.");
+
+                }
+            }
+
+        }
+
+        static Assembly MyHandler(object source, ResolveEventArgs e)
+        {
+
+            var path = Path.GetFullPath(e.Name);
+            Assembly[] asbm = AppDomain.CurrentDomain.GetAssemblies();
+            var asm = Assembly.ReflectionOnlyLoadFrom(path);
+
+            string name = asm.FullName;
+            foreach (Assembly assm in asbm)
+            {
+                if (assm.FullName == name)
+                {
+
+                    return null;
+                }
+            }
+            return Assembly.LoadFrom(path);
+        }
+
 
         private void panel1_MouseDown(object sender, MouseEventArgs e)
         {
-
-
+            if (CurrentFigure == null)
+            {
+                IFiguresCreator CurrentCreator = Creators.ElementAt<IFiguresCreator>(comboBox1.SelectedIndex);
+                CurrentFigure = CurrentCreator.Create(-1, -1, gr, pen, FillColorPanel.BackColor);
+            }
             CurrentFigure.StartPoint = new Point(e.X, e.Y);
             PreDrawTimer.Enabled = true;
 
@@ -93,6 +187,8 @@ namespace WindowsFormsApp1
 
         private void panel1_MouseMove(object sender, MouseEventArgs e)
         {
+            if (CurrentFigure == null)
+                return;
             if (CurrentFigure.StartPoint.X < 0)
                 return;
 
@@ -112,9 +208,6 @@ namespace WindowsFormsApp1
                 CurrentFigure.PreDrawEndPoint = e.Location;
                 gr.Dispose();
                 PreDrawTimer.Enabled = true;
-
-
-
             }
 
 
@@ -122,6 +215,8 @@ namespace WindowsFormsApp1
 
         private void panel1_MouseUp(object sender, MouseEventArgs e)
         {
+            if (CurrentFigure == null)
+                return;
             timer1.Enabled = false;
             PreDrawTimer.Enabled = false;
 
@@ -175,13 +270,29 @@ namespace WindowsFormsApp1
             catch { }
         }
 
+        private void ClearButton_Click(object sender, EventArgs e)
+        {
+            gr = Graphics.FromImage(MainPicture);
 
+            gr.Clear(pictureBox1.BackColor);
+            pictureBox1.Image = MainPicture;
+            FiguresBackBuffer = new UndoStack();
+            FiguresFrontBuffer = new UndoStack();
+            undo.Enabled = false;
+            redo.Enabled = false;
+
+            CurrentFigure = null;
+            //IFiguresCreator CurrentCreator = Creators.ElementAt<IFiguresCreator>(comboBox1.SelectedIndex);
+            //CurrentFigure = CurrentCreator.Create(-1, -1, null, pen, FillColorPanel.BackColor);
+
+        }
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             numericUpDown1.Visible = false;
             TopsLabel.Visible = false;
-            shapeintfc CurrentCreator = Creators.ElementAt<shapeintfc>(comboBox1.SelectedIndex);
+            //label2.Visible = false;
+            IFiguresCreator CurrentCreator = Creators.ElementAt<IFiguresCreator>(comboBox1.SelectedIndex);
 
             CurrentFigure = CurrentCreator.Create(-1, -1, gr, pen, FillColorPanel.BackColor);
 
@@ -192,12 +303,29 @@ namespace WindowsFormsApp1
             }
             if (FiguresBackBuffer.Count > 0)
                 FiguresBackBuffer.ElementAt(0).EndOfCurrentFigure = true;
+
         }
 
         private void PenWidthBar_Scroll(object sender, EventArgs e)
         {
+
+            if (CurrentFigure != null)
+                CurrentFigure.DrPen.Width = PenWidthBar.Value;
             pen.Width = PenWidthBar.Value;
-            label3.Text = String.Format("Толщина линий: {0}", PenWidthBar.Value);
+            if (FiguresBackBuffer.Count >= 1)
+            {
+                IFigure tmp = FiguresBackBuffer.Pop();
+                if (!tmp.EndOfCurrentFigure)
+                {
+                    tmp.DrPen.Width = PenWidthBar.Value;
+                }
+                FiguresBackBuffer.Push(tmp);
+                gr = Graphics.FromImage(MainPicture);
+                gr.Clear(pictureBox1.BackColor);
+                FiguresBackBuffer.DrawStack(gr);
+                pictureBox1.Image = MainPicture;
+            }
+
         }
 
         private void numericUpDown1_ValueChanged(object sender, EventArgs e)
@@ -220,71 +348,21 @@ namespace WindowsFormsApp1
             {
                 FillColorPanel.BackColor = colorDialog1.Color;
                 CurrentFigure.FillColor = colorDialog1.Color;
-
-
             }
         }
 
 
 
 
-
-
-        private void Form1_Load(object sender, EventArgs e)
+        private void timer1_Tick(object sender, EventArgs e)
         {
-
+            label3.Text = FpsCounter.ToString();
+            FpsCounter = 0;
         }
 
-        private void pictureBox1_Click(object sender, EventArgs e)
+        private void RedoButton_Click(object sender, EventArgs e)
         {
-
-        }
-
-        private void label3_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void PenColorPanel_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-
-        private void TopsLabel_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void undo_Click(object sender, EventArgs e)
-        {
-            int N = FiguresBackBuffer.Count;
-            if (N <= 0)
-                return;
-            if (FiguresFrontBuffer == null)
-                FiguresFrontBuffer = new ustack();
-            Figure Last = FiguresBackBuffer.ElementAt(0);
-            Last.EndOfCurrentFigure = true;
-            FiguresFrontBuffer.Push(Last);
-            FiguresBackBuffer.Pop();
-            redo.Enabled = true;
-            gr = Graphics.FromImage(MainPicture);
-            gr.Clear(pictureBox1.BackColor);
-            FiguresBackBuffer.DrawStack(gr);
-            pictureBox1.Image = MainPicture;
-            if (FiguresBackBuffer.Count <= 0)
-                undo.Enabled = false;
-            shapeintfc CurrentCreator = Creators.ElementAt<shapeintfc>(comboBox1.SelectedIndex);
-            CurrentFigure = CurrentCreator.Create(-1, -1, gr, pen, FillColorPanel.BackColor);
-        }
-
-        private void redo_Click(object sender, EventArgs e)
-        {
-            Figure tmp = FiguresFrontBuffer.Pop();
+            IFigure tmp = FiguresFrontBuffer.Pop();
             gr = Graphics.FromImage(MainPicture);
             tmp.DrawPanel = gr;
             tmp.Redraw();
@@ -298,30 +376,269 @@ namespace WindowsFormsApp1
             }
         }
 
+        private void Form1_KeyUp(object sender, KeyEventArgs e)
+        {
+
+            if (e.Control == true)
+            {
+                if (e.KeyCode == Keys.Z && undo.Enabled)
+                {
+                    button1_Click(null, null);
+                }
+                if (e.KeyCode == Keys.B && redo.Enabled)
+                {
+                    RedoButton_Click(null, null);
+                }
+            }
+        }
+
+        private void SaveButton_Click(object sender, EventArgs e)
+        {
+            CurrentFigure = null;
+            openFileDialog1.CheckFileExists = false;
+            if (openFileDialog1.ShowDialog() != DialogResult.OK)
+                return;
+
+            string path = openFileDialog1.FileName;
+            FileStream F = File.Open(path, FileMode.Create);
+            if (F == null)
+            {
+                MessageBox.Show("Cannot create output file!");
+                return;
+            }
+            try
+            {
+                StreamWriter st = new StreamWriter(F);
+                JsonSerializerSettings settings = new JsonSerializerSettings();
+                settings.TypeNameHandling = TypeNameHandling.All;
+                for (int i = FiguresBackBuffer.Count - 1; i >= 0; i--)
+                {
+                    IFigure Tmp = FiguresBackBuffer.ElementAt(i);
+                    try
+                    {
+                        Tmp.EndOfCurrentFigure = true;
+                        string json = JsonConvert.SerializeObject(Tmp, Tmp.GetType(), settings);
+                        st.WriteLine(json);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                        break;
+                    }
+                }
+                st.Close();
+
+
+            }
+            finally
+            {
+
+                F.Close();
+            }
+        }
+
+
+
+        private void LoadButton_Click(object sender, EventArgs e)
+        {
+
+            openFileDialog1.CheckFileExists = true;
+            if (openFileDialog1.ShowDialog() != DialogResult.OK)
+                return;
+
+            string path = openFileDialog1.FileName;
+            FileStream F = File.Open(path, FileMode.Open);
+            if (F == null)
+            {
+                MessageBox.Show("Cannot open this file!");
+                return;
+            }
+            try
+            {
+                ClearButton_Click(null, null);
+
+                StreamReader st = new StreamReader(F);
+                JsonSerializerSettings settings = new JsonSerializerSettings();
+                settings.TypeNameHandling = TypeNameHandling.All;
+                IFigure Tmp;
+                string json = st.ReadLine();
+                int i = 0;
+                while (json != null)
+                {
+                    try
+                    {
+                        Tmp = (IFigure)JsonConvert.DeserializeObject(json, settings);
+                        FiguresBackBuffer.Push(Tmp);
+                    }
+                    catch (Exception ex)
+                    {
+                        string type = json.Substring(json.IndexOf(':'), json.IndexOf(','));
+                        MessageBox.Show("Error on line " + i.ToString() + ". Cannot read this Figure:" + type);
+
+                    }
+
+                    i++;
+                    json = st.ReadLine();
+                }
+
+
+                gr = Graphics.FromImage(MainPicture);
+                gr.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                FiguresBackBuffer.DrawStack(gr);
+                pictureBox1.Image = MainPicture;
+                st.Close();
+                undo.Enabled = true;
+            }
+            finally
+            {
+                F.Close();
+            }
+
+
+        }
+
+        private void сохранитьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CurrentFigure = null;
+            openFileDialog1.CheckFileExists = false;
+            if (openFileDialog1.ShowDialog() != DialogResult.OK)
+                return;
+
+            string path = openFileDialog1.FileName;
+            FileStream F = File.Open(path, FileMode.Create);
+            if (F == null)
+            {
+                MessageBox.Show("Cannot create output file!");
+                return;
+            }
+            try
+            {
+                StreamWriter st = new StreamWriter(F);
+                JsonSerializerSettings settings = new JsonSerializerSettings();
+                settings.TypeNameHandling = TypeNameHandling.All;
+                for (int i = FiguresBackBuffer.Count - 1; i >= 0; i--)
+                {
+                    IFigure Tmp = FiguresBackBuffer.ElementAt(i);
+                    try
+                    {
+                        Tmp.EndOfCurrentFigure = true;
+                        string json = JsonConvert.SerializeObject(Tmp, Tmp.GetType(), settings);
+                        st.WriteLine(json);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                        break;
+                    }
+                }
+                st.Close();
+
+
+            }
+            finally
+            {
+
+                F.Close();
+            }
+        }
+
+        private void импортToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            openFileDialog1.CheckFileExists = true;
+            if (openFileDialog1.ShowDialog() != DialogResult.OK)
+                return;
+
+            string path = openFileDialog1.FileName;
+            FileStream F = File.Open(path, FileMode.Open);
+            if (F == null)
+            {
+                MessageBox.Show("Cannot open this file!");
+                return;
+            }
+            try
+            {
+                ClearButton_Click(null, null);
+
+                StreamReader st = new StreamReader(F);
+                JsonSerializerSettings settings = new JsonSerializerSettings();
+                settings.TypeNameHandling = TypeNameHandling.All;
+                IFigure Tmp;
+                string json = st.ReadLine();
+                int i = 0;
+                while (json != null)
+                {
+                    try
+                    {
+                        Tmp = (IFigure)JsonConvert.DeserializeObject(json, settings);
+                        FiguresBackBuffer.Push(Tmp);
+                    }
+                    catch (Exception ex)
+                    {
+                        string type = json.Substring(json.IndexOf(':'), json.IndexOf(','));
+                        MessageBox.Show("Error on line " + i.ToString() + ". Cannot read this Figure:" + type);
+
+                    }
+
+                    i++;
+                    json = st.ReadLine();
+                }
+
+
+                gr = Graphics.FromImage(MainPicture);
+                gr.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                FiguresBackBuffer.DrawStack(gr);
+                pictureBox1.Image = MainPicture;
+                st.Close();
+                undo.Enabled = true;
+            }
+            finally
+            {
+                F.Close();
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            int N = FiguresBackBuffer.Count;
+            if (N <= 0)
+                return;
+            if (FiguresFrontBuffer == null)
+                FiguresFrontBuffer = new UndoStack();
+
+
+            IFigure Last = FiguresBackBuffer.ElementAt(0);
+
+            Last.EndOfCurrentFigure = true;
+            FiguresFrontBuffer.Push(Last);
+            FiguresBackBuffer.Pop();
+
+
+            redo.Enabled = true;
+
+            gr = Graphics.FromImage(MainPicture);
+            gr.Clear(pictureBox1.BackColor);
+
+            FiguresBackBuffer.DrawStack(gr);
+
+
+            pictureBox1.Image = MainPicture;
+
+            if (FiguresBackBuffer.Count <= 0)
+                undo.Enabled = false;
+
+
+
+            IFiguresCreator CurrentCreator = Creators.ElementAt<IFiguresCreator>(comboBox1.SelectedIndex);
+            CurrentFigure = CurrentCreator.Create(-1, -1, gr, pen, FillColorPanel.BackColor);
+
+        }
+
         private void PreDrawTimer_Tick(object sender, EventArgs e)
         {
             PreDrawTimer.Enabled = false;
         }
-
-        public class UndoStack
-        {
-            private int StackSize = 10;
-            private Stack<Figure> LastFig;
-            private int n = 0;
-            public Graphics gr;
-
-            public UndoStack(int size)
-            {
-                StackSize = size;
-                LastFig = new Stack<Figure>();
-            }
-            public UndoStack()
-            {
-                LastFig = new Stack<Figure>();
-            }
-
-        }
-
     }
+
 
 }
