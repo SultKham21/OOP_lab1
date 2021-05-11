@@ -598,6 +598,55 @@ namespace WindowsFormsApp1
             }
         }
 
+        private void undo_Click(object sender, EventArgs e)
+        {
+            int N = FiguresBackBuffer.Count;
+            if (N <= 0)
+                return;
+            if (FiguresFrontBuffer == null)
+                FiguresFrontBuffer = new UndoStack();
+
+
+            IFigure Last = FiguresBackBuffer.ElementAt(0);
+
+            Last.EndOfCurrentFigure = true;
+            FiguresFrontBuffer.Push(Last);
+            FiguresBackBuffer.Pop();
+
+
+            redo.Enabled = true;
+
+            gr = Graphics.FromImage(MainPicture);
+            gr.Clear(pictureBox1.BackColor);
+
+            FiguresBackBuffer.DrawStack(gr);
+
+
+            pictureBox1.Image = MainPicture;
+
+            if (FiguresBackBuffer.Count <= 0)
+                undo.Enabled = false;
+
+            IFiguresCreator CurrentCreator = Creators.ElementAt<IFiguresCreator>(comboBox1.SelectedIndex);
+            CurrentFigure = CurrentCreator.Create(-1, -1, gr, pen, FillColorPanel.BackColor);
+        }
+
+        private void redo_Click(object sender, EventArgs e)
+        {
+            IFigure tmp = FiguresFrontBuffer.Pop();
+            gr = Graphics.FromImage(MainPicture);
+            tmp.DrawPanel = gr;
+            tmp.Redraw();
+            FiguresBackBuffer.Push(tmp);
+            undo.Enabled = true;
+            pictureBox1.Image = MainPicture;
+            gr.Dispose();
+            if (FiguresFrontBuffer.Count == 0)
+            {
+                redo.Enabled = false;
+            }
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
             int N = FiguresBackBuffer.Count;

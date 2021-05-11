@@ -238,14 +238,14 @@
             // сохранитьToolStripMenuItem
             // 
             this.сохранитьToolStripMenuItem.Name = "сохранитьToolStripMenuItem";
-            this.сохранитьToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.сохранитьToolStripMenuItem.Size = new System.Drawing.Size(166, 26);
             this.сохранитьToolStripMenuItem.Text = "Сохранить";
             this.сохранитьToolStripMenuItem.Click += new System.EventHandler(this.сохранитьToolStripMenuItem_Click);
             // 
             // импортToolStripMenuItem
             // 
             this.импортToolStripMenuItem.Name = "импортToolStripMenuItem";
-            this.импортToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.импортToolStripMenuItem.Size = new System.Drawing.Size(166, 26);
             this.импортToolStripMenuItem.Text = "Импорт";
             this.импортToolStripMenuItem.Click += new System.EventHandler(this.импортToolStripMenuItem_Click);
             // 
@@ -279,6 +279,7 @@
             this.undo.TabIndex = 16;
             this.undo.Text = "undo";
             this.undo.UseVisualStyleBackColor = true;
+            this.undo.Click += new System.EventHandler(this.undo_Click);
             // 
             // redo
             // 
@@ -288,6 +289,7 @@
             this.redo.TabIndex = 17;
             this.redo.Text = "redo";
             this.redo.UseVisualStyleBackColor = true;
+            this.redo.Click += new System.EventHandler(this.redo_Click);
             // 
             // openFileDialog1
             // 
