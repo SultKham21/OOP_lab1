@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30503.244
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1321
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsApp1", "WindowsFormsApp1.csproj", "{628C5DB8-FF14-4787-9314-0B2BD75ED246}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasedInterfaces", "BasedInterfaces\BasedInterfaces\BasedInterfaces.csproj", "{1B85F838-9825-4309-B833-C558A625D5F0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasedInterfaces", "BasedInterfaces\BasedInterfaces.csproj", "{1B85F838-9825-4309-B833-C558A625D5F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,10 +11,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{628C5DB8-FF14-4787-9314-0B2BD75ED246}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{628C5DB8-FF14-4787-9314-0B2BD75ED246}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{628C5DB8-FF14-4787-9314-0B2BD75ED246}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{628C5DB8-FF14-4787-9314-0B2BD75ED246}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1B85F838-9825-4309-B833-C558A625D5F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1B85F838-9825-4309-B833-C558A625D5F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B85F838-9825-4309-B833-C558A625D5F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -26,6 +20,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {FD9DE59B-B357-4C52-BEEE-B9614C95CEB6}
+		SolutionGuid = {00BA598A-8081-427D-8C4E-A94DB459865C}
 	EndGlobalSection
 EndGlobal
