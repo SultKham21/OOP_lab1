@@ -647,6 +647,65 @@ namespace WindowsFormsApp1
             }
         }
 
+        private void импФигурыToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (openDllDialog.ShowDialog() == DialogResult.OK)
+            {
+
+                AppDomain ad = AppDomain.CurrentDomain;
+                ad.AssemblyResolve += MyHandler;
+                var plug = typeof(IFiguresCreator);
+                
+
+                Assembly assembly;
+                try
+                {
+                    assembly = ad.Load(openDllDialog.FileName);
+
+                }
+                catch
+                {
+                    MessageBox.Show("Данная сборка уже загружена");
+                    return;
+                }
+
+
+
+                Type[] types = assembly.GetTypes();
+
+                bool IFiguresExist = false;
+                for (int i = 0; i < types.Length; i++)
+                {
+
+
+                    if (plug.IsAssignableFrom(types[i]))
+                    {
+
+                        try
+                        {
+                            IFiguresCreator Tmp = (IFiguresCreator)Activator.CreateInstance(types[i]);
+
+                            Creators.AddLast(((IFiguresCreator)Activator.CreateInstance(types[i])));
+                            comboBox1.Items.Add(Creators.Last<IFiguresCreator>().Name);
+                        }
+                        catch (Exception ex)
+                        { MessageBox.Show(ex.Message); }
+
+                        IFiguresExist = true;
+
+
+                    }
+
+                }
+
+                if (!IFiguresExist)
+                {
+                    MessageBox.Show("Подходящих ресурсов не найдено.");
+
+                }
+            }
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
             int N = FiguresBackBuffer.Count;
